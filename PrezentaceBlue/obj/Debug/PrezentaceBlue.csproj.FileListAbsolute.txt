@@ -1,0 +1,26 @@
+C:\Users\DavidPiska\Documents\SharpDevelop Projects\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.csprojResolveAssemblyReference.cache
+C:\Users\DavidPiska\Documents\SharpDevelop Projects\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.MainForm.resources
+C:\Users\DavidPiska\Documents\SharpDevelop Projects\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.csproj.GenerateResource.Cache
+C:\Users\DavidPiska\Documents\SharpDevelop Projects\PrezentaceBlue\PrezentaceBlue\bin\Debug\PrezentaceBlue.exe.config
+C:\Users\DavidPiska\Documents\SharpDevelop Projects\PrezentaceBlue\PrezentaceBlue\bin\Debug\PrezentaceBlue.exe
+C:\Users\DavidPiska\Documents\SharpDevelop Projects\PrezentaceBlue\PrezentaceBlue\bin\Debug\PrezentaceBlue.pdb
+C:\Users\DavidPiska\Documents\SharpDevelop Projects\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.exe
+C:\Users\DavidPiska\Documents\SharpDevelop Projects\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.pdb
+D:\Projekty\SimulatorPaneluBlue\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.MainForm.resources
+D:\Projekty\SimulatorPaneluBlue\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.csproj.GenerateResource.Cache
+D:\Projekty\SimulatorPaneluBlue\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\bin\Debug\PrezentaceBlue.exe.config
+D:\Projekty\SimulatorPaneluBlue\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\bin\Debug\PrezentaceBlue.exe
+D:\Projekty\SimulatorPaneluBlue\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\bin\Debug\PrezentaceBlue.pdb
+D:\Projekty\SimulatorPaneluBlue\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.exe
+D:\Projekty\SimulatorPaneluBlue\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.pdb
+D:\Projekty\SimulatorPaneluBlue\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.csproj.AssemblyReference.cache
+D:\Projekty\SimulatorPaneluBlue\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.csproj.CoreCompileInputs.cache
+c:\Users\multi\source\repos\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\bin\Debug\PrezentaceBlue.exe.config
+c:\Users\multi\source\repos\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\bin\Debug\PrezentaceBlue.exe
+c:\Users\multi\source\repos\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\bin\Debug\PrezentaceBlue.pdb
+c:\Users\multi\source\repos\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.csproj.AssemblyReference.cache
+c:\Users\multi\source\repos\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.MainForm.resources
+c:\Users\multi\source\repos\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.csproj.GenerateResource.cache
+c:\Users\multi\source\repos\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.csproj.CoreCompileInputs.cache
+c:\Users\multi\source\repos\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.exe
+c:\Users\multi\source\repos\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.pdb

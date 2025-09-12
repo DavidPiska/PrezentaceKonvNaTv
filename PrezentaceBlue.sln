@@ -1,0 +1,18 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+# SharpDevelop 5.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrezentaceBlue", "PrezentaceBlue\PrezentaceBlue.csproj", "{096A1C5B-1E66-4B4A-B3DE-434BDEC888EF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{096A1C5B-1E66-4B4A-B3DE-434BDEC888EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{096A1C5B-1E66-4B4A-B3DE-434BDEC888EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{096A1C5B-1E66-4B4A-B3DE-434BDEC888EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{096A1C5B-1E66-4B4A-B3DE-434BDEC888EF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
