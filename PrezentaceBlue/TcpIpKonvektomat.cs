@@ -1,291 +1,351 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Text;
 
 namespace PrezentaceBlue
 {
-	class TcpIpKonvektomat
-	{
-		public string IP = "192.168.3.192";
-		string eTAG = "";
-		string loginName = "pepa";
-		string loginPass = "123";
-		//private bool debug = true;
-		private bool debug = false;
+  class TcpIpKonvektomat
+  {
+    public string IP = "192.168.3.192";
+    string eTAG = "";
+    string loginName = "pepa";
+    string loginPass = "123";
 
-		public bool IsConnected = false;
-		public State Status = State.Null;
+    public bool IsConnected = false;
+    public State Status = State.Null;
 
-		public enum State
-		{ Null,
-			WaitingForLogin,
-			IsLoggedIn,
-			WaitingForBitmap,
-			ResponseOK,
-			ResponseError,
-			WaitingForLogout,
-			IsDisconnected
-		}
+    public enum State
+    {
+      Null,
+      WaitingForLogin,
+      IsLoggedIn,
+      WaitingForBitmap,
+      ResponseOK,
+      ResponseError,
+      WaitingForLogout,
+      IsDisconnected
+    }
 
-		public enum Rotation
-		{
-			None = 0,
-			Deg90 = 90,
-			Deg180 = 180,
-			Deg270 = 270
-		}
+    public void SetIP(string ip) { IP = ip; }
+    public void SetDebugMode(bool debug) { this.debug = debug; }
+    private bool debug = false;
 
-		private Rotation imageRotation = Rotation.None;
+    CookieContainer cookieContainer = new CookieContainer();
+    string cookiestring = null;
 
-		public void SetRotation(Rotation rotation)
-		{
-			imageRotation = rotation;
-		}
+    // ---- Nastavení timeoutů a připojení (http only)
+    private const int CONNECT_TIMEOUT = 5000;  // ms
+    private const int RW_TIMEOUT = 8000;       // ms
 
-		public void SetRotationDegrees(int degrees)
-		{
-			// Accept 0/90/180/270; anything else falls back to None
-			switch (degrees)
-			{
-				case 90: imageRotation = Rotation.Deg90; break;
-				case 180: imageRotation = Rotation.Deg180; break;
-				case 270: imageRotation = Rotation.Deg270; break;
-				default: imageRotation = Rotation.None; break;
-			}
-		}
+    private static HttpWebRequest MakeRequest(string url)
+    {
+      var req = (HttpWebRequest)WebRequest.Create(url);
+      req.Timeout = CONNECT_TIMEOUT;
+      req.ReadWriteTimeout = RW_TIMEOUT;
+      req.Proxy = null;
+      req.KeepAlive = false; // tvrdé uzavření, méně zaseknutí
+      return req;
+    }
 
+    private static void LogWebException(string where, WebException wex, string ip, string pathOrUrl)
+    {
+      var http = wex.Response as HttpWebResponse;
+      if (http != null)
+        RollingLog.Error($"{where}: WebException HTTP {(int)http.StatusCode} {http.StatusCode} (ip={ip}, url=http://{ip}{pathOrUrl})", wex);
+      else
+        RollingLog.Error($"{where}: WebException {wex.Status} (ip={ip}, url=http://{ip}{pathOrUrl})", wex);
+    }
 
-		public void SetIP(string ip)
-		{ IP=ip;
-		}
+    public bool doLogin()
+    {
+      HttpWebRequest request = null;
+      HttpWebResponse response = null;
+      try
+      {
+        Status = State.WaitingForLogin;
+        var url = "http://" + IP + "/login.html?do=login";
+        RollingLog.Info($"Login: start (ip={IP}, url={url})");
 
-				public void SetDebugMode(bool debug)
-				{
-						this.debug = debug; 
-				}
+        cookieContainer = new CookieContainer();
+        request = MakeRequest(url);
+        request.CookieContainer = cookieContainer;
 
+        string postData = "user_name=" + Uri.EscapeDataString(loginName) + "&password=" + Uri.EscapeDataString(loginPass);
+        byte[] data = Encoding.ASCII.GetBytes(postData);
 
-		CookieContainer cookieContainer = new CookieContainer();
-		//WebRequest request as HttpWebRequest;
-		string cookiestring = null;
+        request.Method = "POST";
+        request.ContentType = "application/x-www-form-urlencoded";
+        request.ContentLength = data.Length;
 
+        using (var stream = request.GetRequestStream())
+          stream.Write(data, 0, data.Length);
 
+        response = (HttpWebResponse)request.GetResponse();
 
-		public bool doLogin()
-		{
-			try
-			{
-				Status = State.WaitingForLogin;
-				if (debug) Log.Write("Login");
-				var request = (HttpWebRequest)WebRequest.Create("http://" + IP + "/login.html?do=login");
-				cookieContainer = new CookieContainer(); 
-				request.CookieContainer = cookieContainer;
-				string postData = "user_name=" + loginName + "&password=" + loginPass;
-				byte[] data = Encoding.ASCII.GetBytes(postData);
-				request.Method = "POST";
-				request.ContentType = "application/x-www-form-urlencoded";
-				request.ContentLength = data.Length;
-				request.Timeout = 5000;
-				using (var stream = request.GetRequestStream())
-				{
-					stream.Write(data, 0, data.Length);
-				}
-				var response = (HttpWebResponse)request.GetResponse();
-				cookiestring = cookieContainer.GetCookieHeader(request.RequestUri);
+        // extrahuj cookies pro jistotu i jako raw string (některé servery kontrolují přesný header)
+        cookiestring = cookieContainer.GetCookieHeader(request.RequestUri);
+        if (string.IsNullOrEmpty(cookiestring))
+        {
+          // fallback – vyrob Cookie header ručně z CookieContainer
+          var cookies = cookieContainer.GetCookies(request.RequestUri);
+          if (cookies.Count > 0)
+          {
+            var sb = new StringBuilder();
+            foreach (Cookie c in cookies)
+            {
+              if (sb.Length > 0) sb.Append("; ");
+              sb.Append(c.Name).Append('=').Append(c.Value);
+            }
+            cookiestring = sb.ToString();
+          }
+        }
 
+        IsConnected = response.StatusCode == HttpStatusCode.OK;
+        Status = IsConnected ? State.IsLoggedIn : State.Null;
 
-				if (response.StatusDescription == "OK")
-				{
-					if (debug) Log.Write("Login - Response OK - IsConnected");
-					IsConnected = true;
-					Status = State.IsLoggedIn;
-					response.Close();
-					return true;  // login OK
-				}
-				if(response!=null)response.Close();
-			}
-			catch (Exception ex)
-			{
-				if (debug) Log.Write("Login",ex);
-			}
-			IsConnected = false;
-			Status = State.Null;
-			return false;
-		}
+        RollingLog.Info($"Login: status={(int)response.StatusCode} connected={IsConnected} (ip={IP})");
+        return IsConnected;
+      }
+      catch (WebException wex)
+      {
+        LogWebException("Login", wex, IP, "/login.html?do=login");
+        IsConnected = false;
+        Status = State.Null;
+        return false;
+      }
+      catch (Exception ex)
+      {
+        RollingLog.Error($"Login: Exception (ip={IP})", ex);
+        IsConnected = false;
+        Status = State.Null;
+        return false;
+      }
+      finally
+      {
+        try { response?.Close(); } catch { }
+        try { request?.Abort(); } catch { }
+      }
+    }
 
-		public bool doLogout()
-		{
-			if (debug) Log.Write("Logout");
-			try
-			{
-				Status = State.WaitingForLogout;
-				var request = (HttpWebRequest)WebRequest.Create("http://" + IP + "/login.html?do=logout");
-				request.Headers.Set(HttpRequestHeader.Cookie, cookiestring);
-				request.Method = "GET";
-				request.ContentType = "application/x-www-form-urlencoded";
-				request.ContentLength = 0;
-				request.Timeout = 5000;
-				var response = (HttpWebResponse)request.GetResponse();		
+    public bool doLogout()
+    {
+      HttpWebRequest request = null;
+      HttpWebResponse response = null;
+      try
+      {
+        Status = State.WaitingForLogout;
+        var url = "http://" + IP + "/login.html?do=logout";
+        request = MakeRequest(url);
 
-				if (response.StatusDescription == "OK")
-				{
-					if (debug) Log.Write("Logout - Response OK - IsDisconnected");
-					IsConnected = false;
-					Status = State.IsDisconnected;
-					response.Close();
-					return true;  // login OK
-				}
-				if (response != null) response.Close();
-			}
-			catch (Exception ex)
-			{
-				if (debug) Log.Write("Logout", ex);
-			}
-			Status = State.Null;
-			return false;
-		}
+        // přidej cookies jak přes container, tak „natvrdo“
+        request.CookieContainer = cookieContainer;
+        if (!string.IsNullOrEmpty(cookiestring))
+          request.Headers.Set(HttpRequestHeader.Cookie, cookiestring);
 
+        request.Method = "GET";
+        request.ContentType = "application/x-www-form-urlencoded";
+        request.ContentLength = 0;
 
+        response = (HttpWebResponse)request.GetResponse();
+        var ok = response.StatusCode == HttpStatusCode.OK;
 
-		public Bitmap GetBitmap()
-		{
-			Bitmap bmp = null;
-			try
-			{
-				if (debug) Log.Write("GetBitmap");
-				Status = State.WaitingForBitmap;
-				DebugLog.tStart(1);
-				var request = (HttpWebRequest)WebRequest.Create("http://" + IP + "/screen.bmp");
-				if (eTAG != "")
-				{ //request.IfModifiedSince= DateTime.Parse(httpGetLastTime);
-					//request.LastModified= DateTime.Parse(httpGetLastTime);
-					request.Headers.Add("If-None-Match", eTAG);
-				}
+        RollingLog.Info($"Logout: status={(int)response.StatusCode} ok={ok} (ip={IP})");
 
-				request.Method = "GET";
-				request.AutomaticDecompression = DecompressionMethods.GZip;
-				request.Headers.Add("Cache-Control", "max-age=3600, must-revalidate");
-				request.Headers.Set(HttpRequestHeader.Cookie, cookiestring);
-				request.Timeout = 5000;
-				request.ContentType = "application/x-www-form-urlencoded";
-				DebugLog.tStop(1);
-				DebugLog.tStart(3);
+        IsConnected = !ok ? IsConnected : false;
+        Status = ok ? State.IsDisconnected : State.Null;
+        return ok;
+      }
+      catch (WebException wex)
+      {
+        LogWebException("Logout", wex, IP, "/login.html?do=logout");
+        Status = State.Null;
+        return false;
+      }
+      catch (Exception ex)
+      {
+        RollingLog.Error($"Logout: Exception (ip={IP})", ex);
+        Status = State.Null;
+        return false;
+      }
+      finally
+      {
+        try { response?.Close(); } catch { }
+        try { request?.Abort(); } catch { }
+      }
+    }
 
-				try
-				{
-					DebugLog.tStart(4);
+   
+    public Bitmap GetBitmap()
+    {
+      Bitmap bmp = null;
+      HttpWebRequest request = null;
+      HttpWebResponse response = null;
 
-					var response = (HttpWebResponse)request.GetResponse();
-					DebugLog.tStop(4);
+      try
+      {
+        Status = State.WaitingForBitmap;
 
-					if (response.StatusCode == HttpStatusCode.NotModified)  // neni zmena
-					{
-						if (debug) Log.Write("NotModified");
-						response.Close();
-						Status = State.IsLoggedIn;
-						return null;
-					}
+        var url = "http://" + IP + "/screen.bmp";
+        RollingLog.Info($"GetBitmap: GET {url} (If-None-Match={eTAG ?? ""})");
 
-					if (response.StatusCode == HttpStatusCode.NotFound)
-					{
-						if (debug) Log.Write("NotFound");
-						response.Close();
-						Status = State.IsLoggedIn;
-						return null;
-					}
+        request = MakeRequest(url);
 
-					if (response.StatusDescription == "OK")
-					{
-						DebugLog.tStart(5);
-						Stream responseStream = response.GetResponseStream();
-						if (response.Headers.Count > 0)
-						{
-							eTAG = response.Headers.Get("Etag");
-								MainForm.LAstEtag = eTAG;
-						}
-						bmp = new Bitmap(responseStream);
+        if (eTAG != "")
+        {
+          request.Headers.Add("If-None-Match", eTAG);
+        }
 
-						switch (imageRotation)
-						{
-							case Rotation.Deg90:
-								bmp.RotateFlip(RotateFlipType.Rotate90FlipNone);
-								break;
-							case Rotation.Deg180:
-								bmp.RotateFlip(RotateFlipType.Rotate180FlipNone);
-								break;
-							case Rotation.Deg270:
-								bmp.RotateFlip(RotateFlipType.Rotate270FlipNone);
-								break;
-							case Rotation.None:
-							default:
-								break;
-						}
-
-						DebugLog.tStop(5);
-						if (debug) Log.Write("GetBitmap - Response OK -etag:"+eTAG);
-						response.Close();
-						Status = State.ResponseOK;
-						return bmp;
-					}
-					else
-					{
-						//login = false; // kdyz se nepovede, tak se odhalsi
-					}
-				}
-				catch (WebException ex)
-				{
-					
-					DebugLog.tStop(3);
-					if (ex.Status != WebExceptionStatus.ProtocolError)
-					{
-						Status = State.ResponseError;
-						if (debug) Log.Write("GetBitmap - WebExceptionStatus.ProtocolError", ex);
-						//login = false; // kdyz se nepovede, tak se odhalsi
-						return null;
-					}
-
-					var response = (HttpWebResponse)ex.Response;
-					if (response.StatusCode == HttpStatusCode.NotModified)  // je zmena
-					{
-						response.Close();
-						Status = State.ResponseOK;
-						if (debug) Log.Write("GetBitmap - NotModified");
-						return null;
-					}
+        request.Method = "GET";
+        request.AutomaticDecompression = DecompressionMethods.GZip;
+        request.ContentType = "application/x-www-form-urlencoded";
+        request.Headers.Add("Cache-Control", "max-age=3600, must-revalidate");
+        request.Headers.Set(HttpRequestHeader.Cookie, cookiestring);
+        request.Timeout = 5000;
+        request.ContentType = "application/x-www-form-urlencoded";
 
 
-					if (response.StatusCode == HttpStatusCode.NotFound)
-					{
-						//login = false; // kdyz se nepovede, tak se odhalsi
-					}
-										
-					if (response.Headers.Count > 0)
-					{ //s=response.Headers.Get("last-modified");
-					}
+        var t0 = DateTime.UtcNow;
+        try
+        {
+          response = (HttpWebResponse)request.GetResponse();
+        }
+        catch (WebException wex)
+        {
+          var http = wex.Response as HttpWebResponse;
+          var took = (DateTime.UtcNow - t0).TotalMilliseconds;
 
-					Status = State.ResponseError;
-					if (debug) Log.Write("GetBitmap Ex", ex);
-					response.Close();
-					return null;
-				}
-				DebugLog.tStop(3);
+          // 304 = normální stav (bez změny)
+          if (http != null && http.StatusCode == HttpStatusCode.NotModified)
+          {
+            RollingLog.Info($"GetBitmap: 304 Not Modified after {took:F0} ms (ip={IP}, url={url})");
+            Status = State.IsLoggedIn;
+            return null;
+          }
 
-			}
-			catch (Exception ex)
-			{
-				Status = State.ResponseError;
-				if (debug) Log.Write("GetBitmap Ex2", ex);
-			}
+          LogGetResponseException("GetBitmap.GetResponse", wex, request, t0, IP, "/screen.bmp");
+          Status = State.ResponseError;
 
-			return bmp;
-		}
+          if (wex.Status == WebExceptionStatus.Timeout ||
+              wex.Status == WebExceptionStatus.ConnectFailure ||
+              wex.Status == WebExceptionStatus.NameResolutionFailure)
+            IsConnected = false;
+
+          return null;
+        }
+
+        if (response.StatusCode == HttpStatusCode.NotModified)
+        {
+          RollingLog.Info($"GetBitmap: 304 Not Modified → null (ip={IP})");
+          Status = State.IsLoggedIn;
+          return null;
+        }
+
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+          RollingLog.Warn($"GetBitmap: 404 Not Found (ip={IP}, url={url})");
+          Status = State.ResponseError;
+          return null;
+        }
+
+        if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
+        {
+          // ETag
+          var et = response.Headers["ETag"] ?? response.Headers["Etag"];
+          if (!string.IsNullOrEmpty(et)) eTAG = et;
+
+          using (var rs = response.GetResponseStream())
+          using (var ms = new MemoryStream())
+          {
+            rs.CopyTo(ms);
+            if (ms.Length == 0)
+            {
+              RollingLog.Warn($"GetBitmap: empty body with {(int)response.StatusCode} {response.StatusCode} (ip={IP})");
+              Status = State.ResponseError;
+              return null;
+            }
+
+            ms.Position = 0;
+            using (var tmp = new Bitmap(ms))
+            {
+              var safe = new Bitmap(tmp.Width, tmp.Height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+              using (var g = Graphics.FromImage(safe))
+                g.DrawImageUnscaled(tmp, 0, 0);
+
+              bmp = safe;
+            }
+
+            RollingLog.Info($"GetBitmap: {(int)response.StatusCode} {response.StatusCode}, {ms.Length} bytes in {(DateTime.UtcNow - t0).TotalMilliseconds:F0} ms (ip={IP}, ETag={eTAG})");
+          }
+
+          Status = State.ResponseOK;
+          return bmp;
+        }
 
 
-	}
+        RollingLog.Warn($"GetBitmap: HTTP {(int)response.StatusCode} {response.StatusCode} (ip={IP})");
+        Status = State.ResponseError;
+        return null;
+      }
+      catch (WebException wex)
+      {
+        var http = wex.Response as HttpWebResponse;
+        if (http != null && http.StatusCode == HttpStatusCode.NotModified)
+        {
+          RollingLog.Info($"GetBitmap: 304 Not Modified (via WebException) → null (ip={IP})");
+          Status = State.ResponseOK;
+          return null;
+        }
+
+        LogWebException("GetBitmap", wex, IP, "/screen.bmp");
+        Status = State.ResponseError;
+        return null;
+      }
+      catch (Exception ex)
+      {
+        RollingLog.Error($"GetBitmap: Exception (ip={IP})", ex);
+        Status = State.ResponseError;
+        return null;
+      }
+      finally
+      {
+        try { response?.Close(); } catch { }
+        try { request?.Abort(); } catch { }
+      }
+    }
 
 
+
+
+
+    private static void LogGetResponseException(
+    string where, WebException wex, HttpWebRequest req, DateTime startedUtc, string ip, string pathOrUrl)
+    {
+      var ms = (DateTime.UtcNow - startedUtc).TotalMilliseconds;
+      var http = wex.Response as HttpWebResponse;
+
+      // status text pro přehled
+      string statusText = http != null
+          ? $"HTTP {(int)http.StatusCode} {http.StatusCode}"
+          : wex.Status.ToString();
+
+      // u WebExceptionStatus.Timeout to pojmenujeme jasně
+      string extra = (wex.Status == WebExceptionStatus.Timeout) ? " (TIMEOUT)" : "";
+
+      // URL: když jsi použil Create("http://..."), vezmu req.Address; jinak složím z ip+path
+      string url = (req != null && req.Address != null) ? req.Address.ToString() : $"http://{ip}{pathOrUrl}";
+
+      RollingLog.Error(
+          $"{where}: {statusText}{extra} after {ms:F0} ms (ip={ip}, url={url})",
+          wex);
+
+      // zavři response, ať neuvaříš sockety
+      try { http?.Close(); } catch { }
+      try { req?.Abort(); } catch { }
+    }
+
+
+
+  }
 }

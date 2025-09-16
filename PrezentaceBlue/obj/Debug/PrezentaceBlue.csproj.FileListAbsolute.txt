@@ -24,3 +24,12 @@ c:\Users\multi\source\repos\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\obj\Deb
 c:\Users\multi\source\repos\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.csproj.CoreCompileInputs.cache
 c:\Users\multi\source\repos\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.exe
 c:\Users\multi\source\repos\__PrezentaceSW\PrezentaceBlue\PrezentaceBlue\obj\Debug\PrezentaceBlue.pdb
+C:\Users\multi\Source\Repos\PrezentaceKonvNaTv\PrezentaceBlue\bin\Debug\PrezentaceBlue.exe.config
+C:\Users\multi\Source\Repos\PrezentaceKonvNaTv\PrezentaceBlue\bin\Debug\PrezentaceBlue.exe
+C:\Users\multi\Source\Repos\PrezentaceKonvNaTv\PrezentaceBlue\bin\Debug\PrezentaceBlue.pdb
+C:\Users\multi\Source\Repos\PrezentaceKonvNaTv\PrezentaceBlue\obj\Debug\PrezentaceBlue.csproj.AssemblyReference.cache
+C:\Users\multi\Source\Repos\PrezentaceKonvNaTv\PrezentaceBlue\obj\Debug\PrezentaceBlue.MainForm.resources
+C:\Users\multi\Source\Repos\PrezentaceKonvNaTv\PrezentaceBlue\obj\Debug\PrezentaceBlue.csproj.GenerateResource.cache
+C:\Users\multi\Source\Repos\PrezentaceKonvNaTv\PrezentaceBlue\obj\Debug\PrezentaceBlue.csproj.CoreCompileInputs.cache
+C:\Users\multi\Source\Repos\PrezentaceKonvNaTv\PrezentaceBlue\obj\Debug\PrezentaceBlue.exe
+C:\Users\multi\Source\Repos\PrezentaceKonvNaTv\PrezentaceBlue\obj\Debug\PrezentaceBlue.pdb
